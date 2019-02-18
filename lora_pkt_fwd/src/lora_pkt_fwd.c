@@ -1905,13 +1905,11 @@ void thread_down(void) {
     // bool req_ack = false; /* keep track of whether PULL_DATA was acknowledged or not */
 
     /* JSON parsing variables */
-    //JSON_Value *root_val = NULL;
+    JSON_Value *txpk_val = NULL;
     JSON_Object *txpk_obj = NULL;
     JSON_Value *val = NULL; /* needed to detect the absence of some fields */
     const char *str; /* pointer to sub-strings in the JSON data */
     short x0, x1;
-    uint64_t x2;
-    double x3, x4;
 
     ///* variables to send on GPS timestamp */
     //struct tref local_ref; /* time reference used for GPS <-> timestamp conversion */
@@ -2235,7 +2233,7 @@ void thread_down(void) {
             /* initialize TX struct and try to parse JSON */
             memset(&txpkt, 0, sizeof txpkt);
             txpk_val = json_parse_string_with_comments((const char *)(buff_down )); /* JSON offset */
-            txpk_obj = json_value_get_object(txpk_val)
+            txpk_obj = json_value_get_object(txpk_val);
             if (txpk_obj == NULL) {
                 MSG("WARNING: [down] invalid JSON, TX aborted\n");
                 continue;
