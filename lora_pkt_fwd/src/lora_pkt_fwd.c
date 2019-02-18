@@ -1896,7 +1896,7 @@ void thread_down(void) {
 
     /* data buffers */
     uint8_t buff_down[1000]; /* buffer to receive downstream packets */
-    uint8_t buff_req[12]; /* buffer to compose pull requests */
+    //uint8_t buff_req[12]; /* buffer to compose pull requests */
     int msg_len;
 
     // /* protocol variables */
@@ -2248,6 +2248,7 @@ void thread_down(void) {
             // }
 
             /* Parse "immediate" tag, or target timestamp, or UTC time to be converted by GPS (mandatory) */
+            downlink_type = JIT_PKT_TYPE_DOWNLINK_CLASS_A;
             i = json_object_get_boolean(txpk_obj,"imme"); /* can be 1 if true, 0 if false, or -1 if not a JSON boolean */
             if (i == 1) {
                 /* TX procedure: send immediately */
