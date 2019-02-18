@@ -2234,14 +2234,15 @@ void thread_down(void) {
 
             /* initialize TX struct and try to parse JSON */
             memset(&txpkt, 0, sizeof txpkt);
-            txpk_obj = json_parse_string_with_comments((const char *)(buff_down )); /* JSON offset */
+            txpk_val = json_parse_string_with_comments((const char *)(buff_down )); /* JSON offset */
+            txpk_obj = json_value_get_object(txpk_val)
             if (txpk_obj == NULL) {
                 MSG("WARNING: [down] invalid JSON, TX aborted\n");
                 continue;
             }
 
             // /* look for JSON sub-object 'txpk' */
-            // txpk_obj = json_object_get_object(json_value_get_object(root_val), "txpk");
+            //txpk_obj = json_object_get_object(json_value_get_object(root_val), "txpk");
             // if (txpk_obj == NULL) {
             //     MSG("WARNING: [down] no \"txpk\" object in JSON, TX aborted\n");
             //     json_value_free(root_val);
@@ -2330,7 +2331,7 @@ void thread_down(void) {
             val = json_object_get_value(txpk_obj,"freq");
             if (val == NULL) {
                 MSG("WARNING: [down] no mandatory \"freq\" object in JSON, TX aborted\n");
-                json_value_free(txpk_obj);
+                json_value_free(txpk_val);
                 continue;
             }
             txpkt.freq_hz = (uint32_t)((double)(1.0e6) * json_value_get_number(val));
@@ -2339,7 +2340,7 @@ void thread_down(void) {
             val = json_object_get_value(txpk_obj,"rfch");
             if (val == NULL) {
                 MSG("WARNING: [down] no mandatory \"rfch\" object in JSON, TX aborted\n");
-                json_value_free(txpk_obj);
+                json_value_free(txpk_val);
                 continue;
             }
             txpkt.rf_chain = (uint8_t)json_value_get_number(val);
@@ -2354,7 +2355,7 @@ void thread_down(void) {
             str = json_object_get_string(txpk_obj, "modu");
             if (str == NULL) {
                 MSG("WARNING: [down] no mandatory \"modu\" object in JSON, TX aborted\n");
-                json_value_free(txpk_obj);
+                json_value_free(txpk_val);
                 continue;
             }
             if (strcmp(str, "LORA") == 0) {
@@ -2365,13 +2366,13 @@ void thread_down(void) {
                 str = json_object_get_string(txpk_obj, "datr");
                 if (str == NULL) {
                     MSG("WARNING: [down] no mandatory \"datr\" object in JSON, TX aborted\n");
-                    json_value_free(txpk_obj);
+                    json_value_free(txpk_val);
                     continue;
                 }
                 i = sscanf(str, "SF%2hdBW%3hd", &x0, &x1);
                 if (i != 2) {
                     MSG("WARNING: [down] format error in \"datr\", TX aborted\n");
-                    json_value_free(txpk_obj);
+                    json_value_free(txpk_val);
                     continue;
                 }
                 switch (x0) {
@@ -2383,7 +2384,7 @@ void thread_down(void) {
                     case 12: txpkt.datarate = DR_LORA_SF12; break;
                     default:
                         MSG("WARNING: [down] format error in \"datr\", invalid SF, TX aborted\n");
-                        json_value_free(txpk_obj);
+                        json_value_free(txpk_val);
                         continue;
                 }
                 switch (x1) {
@@ -2392,7 +2393,7 @@ void thread_down(void) {
                     case 500: txpkt.bandwidth = BW_500KHZ; break;
                     default:
                         MSG("WARNING: [down] format error in \"datr\", invalid BW, TX aborted\n");
-                        json_value_free(txpk_obj);
+                        json_value_free(txpk_val);
                         continue;
                 }
 
@@ -2400,7 +2401,7 @@ void thread_down(void) {
                 str = json_object_get_string(txpk_obj, "codr");
                 if (str == NULL) {
                     MSG("WARNING: [down] no mandatory \"codr\" object in json, TX aborted\n");
-                    json_value_free(txpk_obj);
+                    json_value_free(txpk_val);
                     continue;
                 }
                 if      (strcmp(str, "4/5") == 0) txpkt.coderate = CR_LORA_4_5;
@@ -2411,7 +2412,7 @@ void thread_down(void) {
                 else if (strcmp(str, "1/2") == 0) txpkt.coderate = CR_LORA_4_8;
                 else {
                     MSG("WARNING: [down] format error in \"codr\", TX aborted\n");
-                    json_value_free(txpk_obj);
+                    json_value_free(txpk_val);
                     continue;
                 }
 
@@ -2442,7 +2443,7 @@ void thread_down(void) {
                 val = json_object_get_value(txpk_obj,"datr");
                 if (val == NULL) {
                     MSG("WARNING: [down] no mandatory \"txpk.datr\" object in JSON, TX aborted\n");
-                    json_value_free(txpk_obj);
+                    json_value_free(txpk_val);
                     continue;
                 }
                 txpkt.datarate = (uint32_t)(json_value_get_number(val));
@@ -2451,7 +2452,7 @@ void thread_down(void) {
                 val = json_object_get_value(txpk_obj,"fdev");
                 if (val == NULL) {
                     MSG("WARNING: [down] no mandatory \"txpk.fdev\" object in JSON, TX aborted\n");
-                    json_value_free(txpk_obj);
+                    json_value_free(txpk_val);
                     continue;
                 }
                 txpkt.f_dev = (uint8_t)(json_value_get_number(val) / 1000.0); /* JSON value in Hz, txpkt.f_dev in kHz */
@@ -2471,7 +2472,7 @@ void thread_down(void) {
 
             } else {
                 MSG("WARNING: [down] invalid modulation in \"modu\", TX aborted\n");
-                json_value_free(txpk_obj);
+                json_value_free(txpk_val);
                 continue;
             }
 
@@ -2479,7 +2480,7 @@ void thread_down(void) {
             val = json_object_get_value(txpk_obj,"size");
             if (val == NULL) {
                 MSG("WARNING: [down] no mandatory \"size\" object in JSON, TX aborted\n");
-                json_value_free(txpk_obj);
+                json_value_free(txpk_val);
                 continue;
             }
             txpkt.size = (uint16_t)json_value_get_number(val);
@@ -2488,7 +2489,7 @@ void thread_down(void) {
             str = json_object_get_string(txpk_obj, "data");
             if (str == NULL) {
                 MSG("WARNING: [down] no mandatory \"data\" object in JSON, TX aborted\n");
-                json_value_free(txpk_obj);
+                json_value_free(txpk_val);
                 continue;
             }
             i = b64_to_bin(str, strlen(str), txpkt.payload, sizeof txpkt.payload);
@@ -2497,7 +2498,7 @@ void thread_down(void) {
             }
 
             /* free the JSON parse tree from memory */
-            json_value_free(txpk_obj);
+            json_value_free(txpk_val);
 
             /* select TX mode */
             if (sent_immediate) {
