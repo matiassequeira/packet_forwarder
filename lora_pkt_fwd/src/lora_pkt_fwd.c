@@ -2108,6 +2108,8 @@ void thread_down(void) {
 
             /* try to receive a datagram */
             msg_len = recv(sock_down, (void *)buff_down, (sizeof buff_down)-1, 0);
+            printf("\nUDP down: %s\n", (char *)(buff_down));
+            
             clock_gettime(CLOCK_MONOTONIC, &recv_time);
 
             /* Pre-allocate beacon slots in JiT queue, to check downlink collisions */
@@ -2248,24 +2250,12 @@ void thread_down(void) {
                 }
                 
                 /*NOTE: if sent_inmediate is true, class should be C*/    
-                str = json_object_get_string(txpk_obj,"class");
-                if (str != NULL) {
-                    if (strcmp(str, "A") == 0) {
-                        downlink_type = JIT_PKT_TYPE_DOWNLINK_CLASS_A;
-                    }
-                    else if (strcmp(str, "B") == 0) {
-                        downlink_type = JIT_PKT_TYPE_DOWNLINK_CLASS_B;
-                    }
-                    else if (strcmp(str, "C") == 0) {
-                        downlink_type = JIT_PKT_TYPE_DOWNLINK_CLASS_C;
-                    }
-                    else {
-                        MSG("INFO: [down] no valid Class selected for downlink JSON/struct. Selecting Class A.\n");
-                        downlink_type = JIT_PKT_TYPE_DOWNLINK_CLASS_A;
-                    }
+                val = json_object_get_value(txpk_obj,"class");
+                if (val == NULL) {
+                    downlink_type = JIT_PKT_TYPE_DOWNLINK_CLASS_A;                  
                 }
                 else {
-                    downlink_type = JIT_PKT_TYPE_DOWNLINK_CLASS_A;
+                    downlink_type = (uint8_t)json_value_get_number(val);
                     MSG("INFO: [down] no Class selected for downlink JSON/struct. Selecting Class A.\n");
                 }
 
