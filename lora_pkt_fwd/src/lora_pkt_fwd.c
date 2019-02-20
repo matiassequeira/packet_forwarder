@@ -270,6 +270,28 @@ static void sig_handler(int sigio) {
     return;
 }
 
+void printTxpkt(struct lgw_pkt_tx_s txpkt){
+    printf("freq_hz: %d\n", txpkt.freq_hz);
+    printf("tx_mode: %d\n", txpkt.tx_mode);
+    printf("count_us: %d\n", txpkt.count_us);
+    printf("rf_chain: %d\n", txpkt.rf_chain);
+    printf("rf_power: %d\n", txpkt.rf_power);
+    printf("modulation: %d\n", txpkt.modulation);
+    printf("bandwidth: %d\n", txpkt.bandwidth);
+    printf("datarate: %d\n", txpkt.datarate);
+    printf("coderate: %d\n", txpkt.coderate);
+    printf("invert_pol: %d\n", txpkt.invert_pol);
+    printf("f_dev: %d\n", txpkt.f_dev);
+    printf("no_crc: %d\n", txpkt.no_crc);
+    printf("no_header: %d\n", txpkt.no_header);
+    printf("size: %d\n", txpkt.size);
+    printf("payload: ");
+    for(int i = 0; i < sizeof(txpkt.payload); i++) {
+        printf("%d", txpkt.payload[i]);
+    }    
+    printf("\n");
+}
+
 static int parse_SX1301_configuration(const char * conf_file) {
     int i;
     char param_name[32]; /* used to generate variable parameter names */
@@ -1906,6 +1928,7 @@ void thread_down(void) {
 
     /* JSON parsing variables */
     JSON_Value *root_val = NULL;
+    JSON_Value *txpk_val = NULL;
     JSON_Object *txpk_obj = NULL;
     JSON_Value *val = NULL; /* needed to detect the absence of some fields */
     const char *str; /* pointer to sub-strings in the JSON data */
@@ -2237,11 +2260,13 @@ void thread_down(void) {
                         downlink_type = JIT_PKT_TYPE_DOWNLINK_CLASS_C;
                     }
                     else {
-                     MSG("INFO: [down] no Class selected for downlink JSON/struct \n");
+                        MSG("INFO: [down] no valid Class selected for downlink JSON/struct. Selecting Class A.\n");
+                        downlink_type = JIT_PKT_TYPE_DOWNLINK_CLASS_A;
                     }
                 }
                 else {
-                     MSG("INFO: [down] no Class selected for downlink JSON/struct \n");
+                    downlink_type = JIT_PKT_TYPE_DOWNLINK_CLASS_A;
+                    MSG("INFO: [down] no Class selected for downlink JSON/struct. Selecting Class A.\n");
                 }
 
                 /* Parse "No CRC" flag (optional field) */
@@ -2278,7 +2303,7 @@ void thread_down(void) {
                 val = json_object_get_value(txpk_obj,"powe");
                 if (val != NULL) {
                     /* Original line was: txpkt.rf_power = (int8_t)json_value_get_number(val) - antenna_gain;*/
-                    xpkt.rf_power = (int8_t)json_value_get_number(val)
+                    txpkt.rf_power = (int8_t)json_value_get_number(val);
                 }
                 
                  /* Parse modulation (mandatory) */
@@ -2298,11 +2323,11 @@ void thread_down(void) {
                 }
 
                 /* Parse bandwith  (mandatory) */
-                val = json_object_get_value(txpk_obj, "bandwith");
+                val = json_object_get_value(txpk_obj, "bandwidth");
                 if (val == NULL) {
-                    MSG("WARNING: [down] no mandatory \"bandwith\" object in JSON\n");
+                    MSG("WARNING: [down] no mandatory \"bandwidth\" object in JSON\n");
                 } else {
-                    txpkt.bandwith = (uint8_t)json_value_get_number(val);
+                    txpkt.bandwidth = (uint8_t)json_value_get_number(val);
                 }
 
                 /* Parse coderate  (mandatory) */
@@ -2343,7 +2368,7 @@ void thread_down(void) {
                     MSG("WARNING: [down] mismatch between .size and .data size once converter to binary\n");
                 }
 
-                printTxpkt(txpkt)
+                printTxpkt(txpkt);
 
                 /* free the JSON parse tree from memory */
                 json_value_free(txpk_val);
@@ -2701,27 +2726,6 @@ void thread_down(void) {
     MSG("\nINFO: End of downstream thread\n");
 }
 
-void printTxpkt(struct lgw_pkt_tx_s txpkt){
-    printf("freq_hz: %d\n", txpkt.freq_hz);
-    printf("tx_mode: %d\n", txpkt.tx_mode);
-    printf("count_us: %d\n", txpkt.count_us);
-    printf("rf_chain: %d\n", txpkt.rf_chain);
-    printf("rf_power: %d\n", txpkt.rf_power);
-    printf("modulation: %d\n", txpkt.modulation);
-    printf("bandwidth: %d\n", txpkt.bandwidth);
-    printf("datarate: %d\n", txpkt.datarate);
-    printf("coderate: %d\n", txpkt.coderate);
-    printf("invert_pol: %d\n", txpkt.invert_pol);
-    printf("f_dev: %d\n", txpkt.f_dev);
-    printf("no_crc: %d\n", txpkt.no_crc);
-    printf("no_header: %d\n", txpkt.no_header);
-    printf("size: %d\n", txpkt.size);
-    printf("payload: %d", txpkt.payload);
-    for(int i = 0; i < sizeof(txpkt.payload); i++) {
-        printf("%d", txpkt.payload[i]);
-    }    
-    printf("\n")
-}
 
 void print_tx_status(uint8_t tx_status) {
     switch (tx_status) {
