@@ -2108,7 +2108,6 @@ void thread_down(void) {
 
             /* try to receive a datagram */
             msg_len = recv(sock_down, (void *)buff_down, (sizeof buff_down)-1, 0);
-            printf("\nUDP down: %s\n", (char *)(buff_down));
             
             clock_gettime(CLOCK_MONOTONIC, &recv_time);
 
@@ -2321,7 +2320,7 @@ void thread_down(void) {
                 }
 
                 /* Parse coderate  (mandatory) */
-                val = json_object_get_value(txpk_obj, "coderate");
+                val = json_object_get_value(txpk_obj, "codr");
                 if (val == NULL) {
                     MSG("WARNING: [down] no mandatory \"coderate\" object in JSON\n");
                 } else {
