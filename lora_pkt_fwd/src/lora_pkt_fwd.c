@@ -286,8 +286,8 @@ void printTxpkt(struct lgw_pkt_tx_s txpkt){
     printf("no_header: %d\n", txpkt.no_header);
     printf("size: %d\n", txpkt.size);
     printf("payload: ");
-    for(int i = 0; i < sizeof(txpkt.payload); i++) {
-        printf("%d", txpkt.payload[i]);
+    for(int i = 0; i < txpkt.size; i++) {
+        printf("0x%x", txpkt.payload[i]);
     }    
     printf("\n");
 }
@@ -2222,21 +2222,21 @@ void thread_down(void) {
             }
 
             if (buff_down[0] == '{'){ /* Means that the program is receiving a JSON object representing the TX struct*/
-                printf("\nJSON down: %s\n", (char *)(buff_down)); /* DEBUG: display JSON payload */
+                printf("\n[GV] Parsing UDP message received as a GV struct: %s\n", (char *)(buff_down)); /* DEBUG: display JSON payload */
                 
                 /* initialize TX struct and try to parse JSON */
                 memset(&txpkt, 0, sizeof txpkt);
                 txpk_val = json_parse_string_with_comments((const char *)(buff_down )); /* JSON offset */
                 txpk_obj = json_value_get_object(txpk_val);
                 if (txpk_obj == NULL) {
-                    MSG("WARNING: [down] invalid JSON/struct, TX aborted\n");
+                    MSG("[GV] WARNING: [down] invalid JSON/struct, TX aborted\n");
                     continue;
                 }
 
                 /* Parse "tx_mode" tag */
                 val = json_object_get_value(txpk_obj,"tx_mode"); /* can be 1 if true, 0 if false, or -1 if not a JSON boolean */
                 if (val == NULL) {
-                    MSG("WARNING: [down] no mandatory \"tx_mode\" object in JSON\n");
+                    MSG("[GV] WARNING: [down] no mandatory \"tx_mode\" object in JSON\n");
     
                 } else {
                     txpkt.tx_mode = (uint8_t) json_value_get_number(val);
@@ -2251,11 +2251,11 @@ void thread_down(void) {
                 /*NOTE: if sent_inmediate is true, class should be C*/    
                 val = json_object_get_value(txpk_obj,"class");
                 if (val == NULL) {
+                    MSG("[GV] INFO: [down] no Class selected for downlink JSON/struct. Selecting Class A.\n");
                     downlink_type = JIT_PKT_TYPE_DOWNLINK_CLASS_A;                  
                 }
                 else {
                     downlink_type = (uint8_t)json_value_get_number(val);
-                    MSG("INFO: [down] no Class selected for downlink JSON/struct. Selecting Class A.\n");
                 }
 
                 /* Parse "No CRC" flag (optional field) */
@@ -2273,7 +2273,7 @@ void thread_down(void) {
                 /* parse target frequency (mandatory) */
                 val = json_object_get_value(txpk_obj,"freq");
                 if (val == NULL) {
-                    MSG("WARNING: [down] no mandatory \"freq\" object in JSON\n");
+                    MSG("[GV] WARNING: [down] no mandatory \"freq\" object in JSON\n");
     
                 } else {
                     txpkt.freq_hz = (uint32_t)((double)(1.0e6) * json_value_get_number(val));
@@ -2282,7 +2282,7 @@ void thread_down(void) {
                 /* parse RF chain used for TX (mandatory) */
                 val = json_object_get_value(txpk_obj,"rfch");
                 if (val == NULL) {
-                    MSG("WARNING: [down] no mandatory \"rfch\" object in JSON\n");
+                    MSG("[GV] WARNING: [down] no mandatory \"rfch\" object in JSON\n");
                     
                 } else {
                     txpkt.rf_chain = (uint8_t)json_value_get_number(val);
@@ -2298,7 +2298,7 @@ void thread_down(void) {
                  /* Parse modulation (mandatory) */
                 val = json_object_get_value(txpk_obj, "modu");
                 if (val == NULL) {
-                    MSG("WARNING: [down] no mandatory \"modu\" object in JSON\n");
+                    MSG("[GV] WARNING: [down] no mandatory \"modu\" object in JSON\n");
                 } else {
                     txpkt.modulation = (uint8_t)json_value_get_number(val);
                 }
@@ -2306,7 +2306,7 @@ void thread_down(void) {
                 /* Parse spreading factor (mandatory) */
                 val = json_object_get_value(txpk_obj, "datarate");
                 if (val == NULL) {
-                    MSG("WARNING: [down] no mandatory \"datarate\" object in JSON\n");
+                    MSG("[GV] WARNING: [down] no mandatory \"datarate\" object in JSON\n");
                 } else {
                     txpkt.datarate = (uint8_t)json_value_get_number(val);
                 }
@@ -2314,7 +2314,7 @@ void thread_down(void) {
                 /* Parse bandwith  (mandatory) */
                 val = json_object_get_value(txpk_obj, "bandwidth");
                 if (val == NULL) {
-                    MSG("WARNING: [down] no mandatory \"bandwidth\" object in JSON\n");
+                    MSG("[GV] WARNING: [down] no mandatory \"bandwidth\" object in JSON\n");
                 } else {
                     txpkt.bandwidth = (uint8_t)json_value_get_number(val);
                 }
@@ -2322,7 +2322,7 @@ void thread_down(void) {
                 /* Parse coderate  (mandatory) */
                 val = json_object_get_value(txpk_obj, "codr");
                 if (val == NULL) {
-                    MSG("WARNING: [down] no mandatory \"coderate\" object in JSON\n");
+                    MSG("[GV] WARNING: [down] no mandatory \"coderate\" object in JSON\n");
                 } else {
                     txpkt.coderate = (uint8_t)json_value_get_number(val);
                 }
@@ -2342,7 +2342,7 @@ void thread_down(void) {
                 /* Parse payload length (mandatory) */
                 val = json_object_get_value(txpk_obj,"size");
                 if (val == NULL) {
-                    MSG("WARNING: [down] no mandatory \"size\" object in JSON\n");
+                    MSG("[GV] WARNING: [down] no mandatory \"size\" object in JSON\n");
                 } else {
                     txpkt.size = (uint16_t)json_value_get_number(val);    
                 }
@@ -2350,13 +2350,14 @@ void thread_down(void) {
                 /* Parse payload data (mandatory) */
                 str = json_object_get_string(txpk_obj, "data");
                 if (str == NULL) {
-                    MSG("WARNING: [down] no mandatory \"data\" object in JSON\n");
+                    MSG("[GV] WARNING: [down] no mandatory \"data\" object in JSON\n");
                 }
                 i = b64_to_bin(str, strlen(str), txpkt.payload, sizeof txpkt.payload);
                 if (i != txpkt.size) {
-                    MSG("WARNING: [down] mismatch between .size and .data size once converter to binary\n");
+                    MSG("[GV] WARNING: [down] mismatch between .size and .data size once converter to binary\n");
                 }
 
+                printf("[GV] Struct:\n");
                 printTxpkt(txpkt);
 
                 /* free the JSON parse tree from memory */
@@ -2667,7 +2668,9 @@ void thread_down(void) {
                 } else {
                     txpkt.tx_mode = TIMESTAMPED;
                 }
-
+                printf("Valid Struct: \n");
+                printTxpkt(txpkt);
+            }
                 /* record measurement data */
                 pthread_mutex_lock(&mx_meas_dw);
                 meas_dw_dgram_rcv += 1; /* count only datagrams with no JSON errors */
@@ -2694,12 +2697,14 @@ void thread_down(void) {
                         MSG("ERROR: Packet REJECTED, unsupported RF power for TX - %d\n", txpkt.rf_power);
                     }
                 }
-            }
+            //} Changed this bracket
+
             /* insert packet to be sent into JIT queue */
             if (jit_result == JIT_ERROR_OK) {
                 gettimeofday(&current_unix_time, NULL);
                 get_concentrator_time(&current_concentrator_time, current_unix_time);
                 jit_result = jit_enqueue(&jit_queue, &current_concentrator_time, &txpkt, downlink_type);
+                printf("JIT Result: %d\n", jit_result);
                 if (jit_result != JIT_ERROR_OK) {
                     printf("ERROR: Packet REJECTED (jit error=%d)\n", jit_result);
                 }
