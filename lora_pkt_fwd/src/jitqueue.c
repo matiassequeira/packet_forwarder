@@ -288,9 +288,9 @@ enum jit_error_e jit_enqueue(struct jit_queue_s *queue, struct timeval *time, st
                     err_collision = JIT_ERROR_COLLISION_BEACON;
                     break;
                 default:
-                    MSG("ERROR: Unknown packet type, should not occur, BUG?\n");
-                    assert(0);
-                    break;
+                    MSG("[GV] ERROR: Unknown packet type, should not occur, BUG?\n");
+                    //assert(0);
+                    //break;
             }
             pthread_mutex_unlock(&mx_jit_queue);
             return err_collision;

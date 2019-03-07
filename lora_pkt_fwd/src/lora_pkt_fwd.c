@@ -270,7 +270,7 @@ static void sig_handler(int sigio) {
     return;
 }
 
-void printTxpkt(struct lgw_pkt_tx_s txpkt){
+void printTxpkt(struct lgw_pkt_tx_s txpkt, int realSize){
     printf("freq_hz: %d\n", txpkt.freq_hz);
     printf("tx_mode: %d\n", txpkt.tx_mode);
     printf("count_us: %d\n", txpkt.count_us);
@@ -286,7 +286,7 @@ void printTxpkt(struct lgw_pkt_tx_s txpkt){
     printf("no_header: %d\n", txpkt.no_header);
     printf("size: %d\n", txpkt.size);
     printf("payload: ");
-    for(int i = 0; i < txpkt.size; i++) {
+    for(int i = 0; i < realSize; i++) {
         printf("0x%x", txpkt.payload[i]);
     }    
     printf("\n");
@@ -2358,7 +2358,7 @@ void thread_down(void) {
                 }
 
                 printf("[GV] Struct:\n");
-                printTxpkt(txpkt);
+                printTxpkt(txpkt, i);
 
                 /* free the JSON parse tree from memory */
                 json_value_free(txpk_val);
@@ -2669,7 +2669,7 @@ void thread_down(void) {
                     txpkt.tx_mode = TIMESTAMPED;
                 }
                 printf("Valid Struct: \n");
-                printTxpkt(txpkt);
+                printTxpkt(txpkt, i);
             }
                 /* record measurement data */
                 pthread_mutex_lock(&mx_meas_dw);
