@@ -290,7 +290,8 @@ enum jit_error_e jit_enqueue(struct jit_queue_s *queue, struct timeval *time, st
                     return err_collision;
                     break;
                 default:
-                    MSG("[GV] ERROR: Unknown packet type, should not occur, BUG?\n");
+                    MSG("ERROR: Unknown packet type, should not occur, BUG?\n");
+                    MSG("[GV] Should assert(0), but was commented. Not returning the err_collision\n");
                     //assert(0);
                     //break;
             }
