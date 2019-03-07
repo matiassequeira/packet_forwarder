@@ -279,6 +279,7 @@ enum jit_error_e jit_enqueue(struct jit_queue_s *queue, struct timeval *time, st
                 case JIT_PKT_TYPE_DOWNLINK_CLASS_C:
                     MSG_DEBUG(DEBUG_JIT_ERROR, "ERROR: Packet (type=%d) REJECTED, collision with packet already programmed at %u (%u)\n", pkt_type, queue->nodes[i].pkt.count_us, packet->count_us);
                     err_collision = JIT_ERROR_COLLISION_PACKET;
+                    return err_collision;
                     break;
                 case JIT_PKT_TYPE_BEACON:
                     if (pkt_type != JIT_PKT_TYPE_BEACON) {
@@ -286,6 +287,7 @@ enum jit_error_e jit_enqueue(struct jit_queue_s *queue, struct timeval *time, st
                         MSG_DEBUG(DEBUG_JIT_ERROR, "ERROR: Packet (type=%d) REJECTED, collision with beacon already programmed at %u (%u)\n", pkt_type, queue->nodes[i].pkt.count_us, packet->count_us);
                     }
                     err_collision = JIT_ERROR_COLLISION_BEACON;
+                    return err_collision;
                     break;
                 default:
                     MSG("[GV] ERROR: Unknown packet type, should not occur, BUG?\n");
@@ -293,7 +295,7 @@ enum jit_error_e jit_enqueue(struct jit_queue_s *queue, struct timeval *time, st
                     //break;
             }
             pthread_mutex_unlock(&mx_jit_queue);
-            return err_collision;
+            
         }
     }
 
