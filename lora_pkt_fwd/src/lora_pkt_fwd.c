@@ -2806,7 +2806,7 @@ void thread_jit(void) {
                     for(int i = 0; i < 100; i++){
                         result = lgw_send(pkt);
                         if (result == LGW_HAL_ERROR){
-                            MSG("[GV] lgw_sen failed")
+                            MSG("[GV] lgw_sen failed");
                         }
                     }
                     
