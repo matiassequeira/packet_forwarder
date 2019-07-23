@@ -2234,7 +2234,7 @@ void thread_down(void) {
                 }
 
                 /* Parse "tx_mode" tag */
-                val = json_object_get_value(txpk_obj,"tx_mode"); /* can be 1 if true, 0 if false, or -1 if not a JSON boolean */
+                val = json_object_get_value(txpk_obj,"tx_mode"); /* can be 1 if timestamped, 0 if inmediate, or -1 if not a JSON boolean */
                 if (val == NULL) {
                     MSG("[GV] WARNING: [down] no mandatory \"tx_mode\" object in JSON\n");
     
@@ -2803,12 +2803,15 @@ void thread_jit(void) {
                     /* send packet to concentrator */
                     pthread_mutex_lock(&mx_concent); /* may have to wait for a fetch to finish */
 
-                    for(int i = 0; i < 100; i++){
-                        result = lgw_send(pkt);
-                        if (result == LGW_HAL_ERROR){
-                            MSG("[GV] lgw_sen failed");
-                        }
-                    }
+                    // for(int i = 0; i < 100; i++){
+                    //     result = lgw_send(pkt);
+                    //     if (result == LGW_HAL_ERROR){
+                    //         MSG("[GV] lgw_sen failed");
+                    //     }
+                    // }
+
+                    result = lgw_send(pkt);
+
                     
                     pthread_mutex_unlock(&mx_concent); /* free concentrator ASAP */
                     if (result == LGW_HAL_ERROR) {
